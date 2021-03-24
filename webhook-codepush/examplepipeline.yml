@@ -8,7 +8,7 @@ trigger:
     - feature/*   
   paths:
     include:
-      - FORMATALENTO/*
+      - webhookcodepush/*
 
 variables:
 - group: Variables-Azure-Cloud-Consultoria-Educacao

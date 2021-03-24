@@ -57,7 +57,7 @@ variable "service_plan_sku_size" {
 #============PSQL=================
 
 variable "psql_name" {
-  default = "psqlconsultoriaeducacao"  #Utiliza um banco existente ou cria um novo?
+  default = "psqlconsultoriaeducacao" #Utiliza um banco existente ou cria um novo?
 }
 
 variable "psql_user" {
