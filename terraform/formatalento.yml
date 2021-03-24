@@ -1,0 +1,384 @@
+trigger:
+  branches:
+    include:
+    - master
+    - develop   
+    - release/*
+    - hotfix/*
+    - feature/*   
+  paths:
+    include:
+      - FORMATALENTO/*
+
+variables:
+- group: Variables-Azure-Cloud-Consultoria-Educacao
+- group: consultoria-educacao-formatalento  
+- name: RepoName
+  value: Kroton-Azure-Consultoria-Educacao
+- name: pathPipe
+  value: FORMATALENTO
+
+
+############################## DEV ##########################################33
+stages:
+  - stage: 'planTfDev'
+    displayName: Terraform Plan DEV
+    dependsOn: []
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')    
+    variables:
+      environment: DEV
+      backend_storage: tfstateterraformdev 
+      psql_password: $(psql_password_dev)     
+    jobs:
+      - job:
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+        - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+          displayName: 'Replace tokens in **/*.tf'
+          inputs:
+            targetFiles: |
+              $(pathPipe)/*.tf
+              $(pathPipe)/*.yaml          
+            tokenPrefix: '$('
+            tokenSuffix: ')' 
+        - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+          displayName: 'Use Terraform 0.13.5'
+          inputs:
+            terraformVersion: 0.13.5
+       
+        - bash: |
+            
+            terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformdev)
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(pathPipe)'
+          displayName: 'Terraform Init'    
+
+        - task: TerraformTaskV1@0
+          displayName: 'Terraform Plan'
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(pathPipe)'
+            commandOptions: '-no-color'
+            environmentServiceNameAzureRM: 'consultoria-educacao-hml'
+
+        - publish: $(Build.SourcesDirectory)/$(pathPipe)
+          artifact: artifact_dev
+          displayName: Publish it as artifact
+###################################APPLY
+  - stage: 'applyTfDev'
+    displayName: Terraform Apply DEV
+    dependsOn: planTfDev
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/'))    
+    variables:
+      environment: DEV
+      backend_storage: tfstateterraformdev
+      psql_password: $(psql_password_dev)   
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: Aprovadores-SystemTeam
+        strategy:
+          runOnce:
+            deploy:        
+              steps:
+              - download: current
+                artifact: artifact_dev              
+              - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+                displayName: 'Use Terraform 0.13.5'
+                inputs:
+                  terraformVersion: 0.13.5
+
+              - bash: |
+                  rm -R -f ./.terraform
+                  terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformdev)
+                workingDirectory: '$(Pipeline.Workspace)/artifact_dev'
+                displayName: 'Terraform Init'
+
+              - task: TerraformTaskV1@0
+                displayName: 'Terraform Apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  workingDirectory: '$(Pipeline.Workspace)/artifact_dev'
+                  commandOptions: '-no-color'
+                  environmentServiceNameAzureRM: 'consultoria-educacao-hml'
+#DESTROY
+  - stage: 'destroyTfDev'
+    displayName: Terraform Destroy DEV
+    dependsOn: planTfDev
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/'))    
+    variables:
+      environment: DEV
+      backend_storage: tfstateterraformdev
+      psql_password: $(psql_password_dev)   
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: Aprovadores-SystemTeam
+        strategy:
+          runOnce:
+            deploy:        
+              steps:
+              - download: current
+                artifact: artifact_dev              
+              - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+                displayName: 'Use Terraform 0.13.5'
+                inputs:
+                  terraformVersion: 0.13.5
+
+              - bash: |
+                  rm -R -f ./.terraform
+                  terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformdev)
+                workingDirectory: '$(Pipeline.Workspace)/artifact_dev'
+                displayName: 'Terraform Init'
+
+              - task: TerraformTaskV1@0
+                displayName: 'Terraform Destroy'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'destroy'
+                  workingDirectory: '$(Pipeline.Workspace)/artifact_dev'
+                  commandOptions: '-no-color'
+                  environmentServiceNameAzureRM: 'consultoria-educacao-hml'
+
+############################## STG ##########################################33
+  - stage: 'planTfStg'
+    displayName: Terraform Plan STG
+    dependsOn: []
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')    
+    variables:
+      environment: STG
+      backend_storage: tfstateterraformstg
+      psql_password: $(psql_password_stg)   
+    jobs:
+      - job:
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+        - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+          displayName: 'Replace tokens in **/*.tf'
+          inputs:
+            targetFiles: |
+              $(pathPipe)/*.tf
+              $(pathPipe)/*.yaml          
+            tokenPrefix: '$('
+            tokenSuffix: ')' 
+        - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+          displayName: 'Use Terraform 0.13.5'
+          inputs:
+            terraformVersion: 0.13.5
+        - bash: |
+            
+            terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformstg)
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(pathPipe)'
+          displayName: 'Terraform Init'   
+        - task: TerraformTaskV1@0
+          displayName: 'Terraform Plan'
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(pathPipe)'
+            commandOptions: '-no-color'
+            environmentServiceNameAzureRM: 'consultoria-educacao-hml'
+        - publish: $(Build.SourcesDirectory)/$(pathPipe)
+          artifact: artifact_stg
+          displayName: Publish it as artifact
+
+  - stage: 'applyTfStg'
+    displayName: Terraform Apply STG
+    dependsOn: planTfStg
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))        
+    variables:
+      environment: STG
+      backend_storage: tfstateterraformstg
+      psql_password: $(psql_password_stg)
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: Aprovadores-SystemTeam
+        strategy:
+          runOnce:
+            deploy:        
+              steps:
+              - download: current
+                artifact: artifact_stg              
+              - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+                displayName: 'Use Terraform 0.13.5'
+                inputs:
+                  terraformVersion: 0.13.5
+              - bash: |
+                  rm -R -f ./.terraform
+                  terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformstg)
+                workingDirectory: '$(Pipeline.Workspace)/artifact_stg'
+                displayName: 'Terraform Init'
+              - task: TerraformTaskV1@0
+                displayName: 'Terraform Apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  workingDirectory: '$(Pipeline.Workspace)/artifact_stg'
+                  commandOptions: '-no-color'
+                  environmentServiceNameAzureRM: 'consultoria-educacao-hml'
+  
+#DESTROY
+  - stage: 'destroyTfStg'
+    displayName: Terraform Destroy STG
+    dependsOn: planTfStg
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))        
+    variables: 
+      environment: STG
+      backend_storage: tfstateterraformstg
+      psql_password: $(psql_password_stg)
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: Aprovadores-SystemTeam
+        strategy:
+          runOnce:
+            deploy:        
+              steps:
+              - download: current
+                artifact: artifact_stg              
+              - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+                displayName: 'Use Terraform 0.13.5'
+                inputs:
+                  terraformVersion: 0.13.5
+              - bash: |
+                  rm -R -f ./.terraform
+                  terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformstg)
+                workingDirectory: '$(Pipeline.Workspace)/artifact_stg'
+                displayName: 'Terraform Init'
+              - task: TerraformTaskV1@0
+                displayName: 'Terraform Destroy'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'destroy'
+                  workingDirectory: '$(Pipeline.Workspace)/artifact_stg'
+                  commandOptions: '-no-color'
+                  environmentServiceNameAzureRM: 'consultoria-educacao-hml'
+
+
+############################## PRD ##########################################33
+  - stage: 'planTfPrd'
+    displayName: Terraform Plan PRD
+    dependsOn: []
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')    
+    variables:
+      environment: PRD
+      backend_storage: tfstateterraformprod
+      psql_password: $(psql_password_prd)      
+    jobs:
+      - job:
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+        - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+          displayName: 'Replace tokens in **/*.tf'
+          inputs:
+            targetFiles: |
+              $(pathPipe)/*.tf
+              $(pathPipe)/*.yaml         
+            tokenPrefix: '$('
+            tokenSuffix: ')' 
+        - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+          displayName: 'Use Terraform 0.13.5'
+          inputs:
+            terraformVersion: 0.13.5
+
+        - bash: |
+            
+            terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformprod)
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(pathPipe)'
+          displayName: 'Terraform Init'
+
+        - task: TerraformTaskV1@0
+          displayName: 'Terraform Plan'
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(pathPipe)'
+            commandOptions: '-no-color'
+            environmentServiceNameAzureRM: 'consultoria-educacao-prd'
+
+        - publish: $(Build.SourcesDirectory)/$(pathPipe)
+          artifact: artifact_prd
+          displayName: Publish it as artifact          
+
+  - stage: 'applyTfPrd'
+    displayName: Terraform Apply PRD
+    dependsOn: planTfPrd
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))        
+    variables: 
+      environment: PRD
+      backend_storage: tfstateterraformprod
+      psql_password: $(psql_password_prd)
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: Aprovadores-DevSecOps
+        strategy:
+          runOnce:
+            deploy:        
+              steps:
+              - download: current
+                artifact: artifact_prd              
+              - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+                displayName: 'Use Terraform 0.13.5'
+                inputs:
+                  terraformVersion: 0.13.5
+              - bash: |
+                  rm -R -f ./.terraform
+                  terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformprod)
+                workingDirectory: '$(Pipeline.Workspace)/artifact_prd'
+                displayName: 'Terraform Init'
+              - task: TerraformTaskV1@0
+                displayName: 'Terraform Apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  workingDirectory: '$(Pipeline.Workspace)/artifact_prd'
+                  commandOptions: '-no-color'
+                  environmentServiceNameAzureRM: 'consultoria-educacao-prd'
+#DESTROY
+  - stage: 'destroyTfPrd'
+    displayName: Terraform destroy PRD
+    dependsOn: planTfPrd
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))        
+    variables: 
+      environment: PRD
+      backend_storage: tfstateterraformprod
+      psql_password: $(psql_password_prd)
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment:  Aprovadores-DevSecOps
+        strategy:
+          runOnce:
+            deploy:        
+              steps:
+              - download: current
+                artifact: artifact_prd              
+              - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+                displayName: 'Use Terraform 0.13.5'
+                inputs:
+                  terraformVersion: 0.13.5
+              - bash: |
+                  rm -R -f ./.terraform
+                  terraform init -backend-config=key=$(RepoName)/$(pathPipe)/terraform.tfstate -backend-config=access_key=$(tfstateterraformprod)
+                workingDirectory: '$(Pipeline.Workspace)/artifact_prd'
+                displayName: 'Terraform Init'
+              - task: TerraformTaskV1@0
+                displayName: 'Terraform Destroy'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'destroy'
+                  workingDirectory: '$(Pipeline.Workspace)/artifact_prd'
+                  commandOptions: '-no-color'
+                  environmentServiceNameAzureRM: 'consultoria-educacao-prd'                  
