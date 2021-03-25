@@ -1,5 +1,5 @@
 resource "azurerm_app_service_plan" "service_plan_webhookpush" {
-  name                = "service-plan-${lower(var.prefix_name_webhookpush)}-${lower(var.environment)}"
+  name                = "service-plan-${(var.prefix_name_webhookpush)}-${(var.environment)}"
   location            = azurerm_resource_group.rg_webhookpush.location
   resource_group_name = azurerm_resource_group.rg_webhookpush.name
   kind                = "Linux"
@@ -22,7 +22,7 @@ resource "azurerm_app_service_plan" "service_plan_webhookpush" {
 
 resource "azurerm_app_service" "webapp_webhookpush" {
 
-  name = var.environment == "PRD" ? "${lower(var.prefix_name_webhookpush)}" : "${lower(var.prefix_name_webhookpush)}${lower(var.environment)}"
+  name = var.environment == "PRD" ? "${(var.prefix_name_webhookpush)}" : "${(var.prefix_name_webhookpush)}${lower(var.environment)}"
 
   location            = azurerm_resource_group.rg_webhookpush.location
   resource_group_name = azurerm_resource_group.rg_webhookpush.name
