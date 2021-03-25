@@ -1,5 +1,5 @@
 resource "azurerm_application_insights" "webhookpush_application_insights" {
-  name                = var.environment == "PRD" ? "${lower(var.prefix_name_webhookpush)}" : "${lower(var.prefix_name_webhookpush)}${lower(var.environment)}"
+  name                = var.environment == "PRD" ? "${(var.prefix_name_webhookpush)}" : "${(var.prefix_name_webhookpush)}${lower(var.environment)}"
   location            = azurerm_resource_group.rg_webhookpush.location
   resource_group_name = azurerm_resource_group.rg_webhookpush.name
   application_type    = "Node.JS"
