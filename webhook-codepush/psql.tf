@@ -13,7 +13,7 @@ resource "azurerm_postgresql_server" "webhookpush" {
   storage_mb = var.psql_storage_mb[var.environment]
 
   backup_retention_days        = 7
-  geo_redundant_backup_enabled = var.environment == "PRD" ? true : false
+  geo_redundant_backup_enabled = var.environment == "STG" ? true : false
   auto_grow_enabled            = true
 
   public_network_access_enabled = true
