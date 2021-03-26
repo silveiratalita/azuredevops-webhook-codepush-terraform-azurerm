@@ -1,4 +1,4 @@
-data "azurerm_resource_group" "system_team" {
+data "azurerm_resource_group" "system-team" {
   name     = "${var.resource_group_webhookpush}"
   location = var.location
 #  tags = local.tags
