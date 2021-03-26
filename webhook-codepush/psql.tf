@@ -33,7 +33,7 @@ resource "azurerm_postgresql_server" "webhookpush" {
 
 resource "azurerm_postgresql_firewall_rule" "webhookpush_firewall" {
   name                = "azure"
-  resource_group_name = azurerm_resource_group.system-team.name
+  resource_group_name = data.azurerm_resource_group.system-team.name
   server_name         = azurerm_postgresql_server.webhookpush.name
   start_ip_address    = "0.0.0.0"
   end_ip_address      = "0.0.0.0"
@@ -41,7 +41,7 @@ resource "azurerm_postgresql_firewall_rule" "webhookpush_firewall" {
 
 resource "azurerm_postgresql_database" "webhookpush_database" {
   name                = var.psql_database_name
-  resource_group_name = azurerm_resource_group.system-team.name
+  resource_group_name = data.azurerm_resource_group.system-team.name
   server_name         = azurerm_postgresql_server.webhookpush.name
   charset             = "UTF8"
   collation           = "English_United States.1252"
