@@ -1,7 +1,6 @@
-data "azurerm_resource_group" "rg_webhookpush" {
-  name     = "${var.resource_group_webhookpush}-${var.environment}"
-  location = var.location[var.environment]
-
+data "azurerm_resource_group" "system_team" {
+  name     = "${var.resource_group_webhookpush}"
+  location = var.location
 #  tags = local.tags
 #  lifecycle {
 #    ignore_changes = [
