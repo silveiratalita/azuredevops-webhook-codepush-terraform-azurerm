@@ -31,7 +31,7 @@ resource "azurerm_app_service" "webapp_webhookpush" {
   tags                = local.tags
   site_config {
     linux_fx_version = var.linux_fx_version
-  #  app_command_line = var.command_line
+    #  app_command_line = var.command_line
   }
 
   lifecycle {

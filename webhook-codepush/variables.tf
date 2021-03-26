@@ -56,7 +56,7 @@ variable "service_plan_sku_size" {
 #============PSQL=================
 
 variable "psql_name" {
-  default = "psqlwebhook" 
+  default = "psqlwebhook"
 }
 
 variable "psql_user" {
@@ -99,7 +99,7 @@ variable "certificate_name" {
 }
 
 variable "keyvault_name" {
-  default = "webhook"   #precisamos validar qual será o keyvalt
+  default = "webhook" #precisamos validar qual será o keyvalt
 }
 
 variable "rg_shared" {
