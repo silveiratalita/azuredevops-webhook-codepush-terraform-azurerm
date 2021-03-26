@@ -1,7 +1,7 @@
 resource "azurerm_app_service_plan" "service_plan_webhookpush" {
   name                = "service-plan-${(var.prefix_name_webhookpush)}-${(var.environment)}"
-  location            = azurerm_resource_group.rg_webhookpush.location
-  resource_group_name = azurerm_resource_group.rg_webhookpush.name
+  location            = azurerm_resource_group.system-team.location
+  resource_group_name = azurerm_resource_group.system-team.name
   kind                = "Linux"
   reserved            = true
   tags                = local.tags
@@ -24,8 +24,8 @@ resource "azurerm_app_service" "webapp_webhookpush" {
 
   name = var.environment == "STG" ? "${(var.prefix_name_webhookpush)}" : "${(var.prefix_name_webhookpush)}${(var.environment)}"
 
-  location            = azurerm_resource_group.rg_webhookpush.location
-  resource_group_name = azurerm_resource_group.rg_webhookpush.name
+  location            = azurerm_resource_group.system-team.location
+  resource_group_name = azurerm_resource_group.system-team.name
   app_service_plan_id = azurerm_app_service_plan.service_plan_webhookpush.id
   https_only          = true
   tags                = local.tags
@@ -44,8 +44,8 @@ resource "azurerm_app_service" "webapp_webhookpush" {
 
 # resource "azurerm_app_service_certificate" "cert" {
 #   name                = var.certificate_name[var.environment]
-#   location            = azurerm_resource_group.rg_webhookpush.location
-#   resource_group_name = azurerm_resource_group.rg_webhookpush.name
+#   location            = azurerm_resource_group.system-team.location
+#   resource_group_name = azurerm_resource_group.system-team.name
 #   key_vault_secret_id = data.azurerm_key_vault_certificate.keyvault_certificate.secret_id
 #   tags                = local.tags
 #   depends_on          = [azurerm_app_service.webapp_webhookpush]

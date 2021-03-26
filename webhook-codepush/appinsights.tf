@@ -1,7 +1,7 @@
 resource "azurerm_application_insights" "webhookpush_application_insights" {
   name                = var.environment == "STG" ? "${(var.prefix_name_webhookpush)}" : "${(var.prefix_name_webhookpush)}${(var.environment)}"
-  location            = azurerm_resource_group.rg_webhookpush.location
-  resource_group_name = azurerm_resource_group.rg_webhookpush.name
+  location            = azurerm_resource_group.system-team.location
+  resource_group_name = azurerm_resource_group.system-team.name
   application_type    = "Node.JS"
   tags                = local.tags
   lifecycle {
