@@ -7,7 +7,7 @@ variable "environment" {
 variable "location" {
   default = {
     DEV = "eastus"
-    STG = "eastus"
+    # STG = "eastus"
   }
 }
 #===========PREFIX==================
