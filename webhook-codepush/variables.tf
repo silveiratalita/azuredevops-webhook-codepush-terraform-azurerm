@@ -2,7 +2,7 @@
 variable "environment" {
   default = "$(environment)"
 }
-#===========LOCATION===================== Onde deverá ser hospedado a aplicação? Deverá ter mais de um ambiente?
+#===========LOCATION===================== 
 
 variable "location" {
   default = {
@@ -15,8 +15,10 @@ variable "prefix_name_webhookpush" {
   default = "webhookpush"
 }
 
-#===================================
-
+#================RESOURCE-GROUP===================
+variable "resource_group_webhookpush" {
+  default = "system-team"
+}
 #=============TAGS==================   
 variable "conjunto-orcamentario" {
   default = "4130328310002495087011"
