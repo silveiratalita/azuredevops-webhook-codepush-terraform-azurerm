@@ -24,8 +24,8 @@ resource "azurerm_app_service" "webapp_webhookpush" {
 
   name = var.environment == "STG" ? "${(var.prefix_name_webhookpush)}" : "${(var.prefix_name_webhookpush)}${(var.environment)}"
 
-  location            = azurerm_resource_group.system-team.location
-  resource_group_name = azurerm_resource_group.system-team.name
+  location            = data.azurerm_resource_group.system-team.location
+  resource_group_name = data.azurerm_resource_group.system-team.name
   app_service_plan_id = azurerm_app_service_plan.service_plan_webhookpush.id
   https_only          = true
   tags                = local.tags
